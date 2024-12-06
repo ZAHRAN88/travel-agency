@@ -1,4 +1,4 @@
-# My Website
+# Travel Agency Website
 
 This is a Next.js  application that showcases the features and functionality of your website.
 
@@ -9,7 +9,6 @@ This is a Next.js  application that showcases the features and functionality of 
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
   - [Running the Project](#running-the-project)
-- [Project Structure](#project-structure)
 - [Contributing](#contributing)
 - [License](#license)
 
