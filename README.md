@@ -22,7 +22,7 @@ This is a Next.js  application that showcases the features and functionality of 
 - Admin dashboard with user management
 
 ## Technologies Used
-- **Framework**: Next.js 15 (with app router)
+- **Framework**: Next.js (with app router)
 - **State Management**: Zustand, Redux
 - **Data Fetching**: TanStack Query
 - **Styling**: Tailwind CSS, Shadcn/UI component library
@@ -54,4 +54,4 @@ The project structure follows the recommended folder structure for a Next.js  ap
 Contributions are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request.
 
 ## License
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [BFCAI License](LICENSE).
