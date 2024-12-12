@@ -62,7 +62,9 @@ export const PackageManagement: React.FC<PackageManagementProps> = React.memo(({
     description: '',
     tripIds: [],
     price: '',
-    discount: ''
+    discount: '',
+    startDate: '',
+    endDate: ''
   });
 
   const calculatePackagePrice = (tripIds: number[], discount: string) => {
@@ -95,7 +97,7 @@ export const PackageManagement: React.FC<PackageManagementProps> = React.memo(({
     
     setIsOpen(false);
     setEditingPackage(null);
-    setFormData({ name: '', description: '', tripIds: [], price: '', discount: '' });
+    setFormData({ name: '', description: '', tripIds: [], price: '', discount: '', startDate: '', endDate: '' });
   };
 
   return (
@@ -176,7 +178,9 @@ export const PackageManagement: React.FC<PackageManagementProps> = React.memo(({
                             description: pkg.description,
                             tripIds: pkg.trips.map(t => t.id),
                             price: pkg.price.toString(),
-                            discount: pkg.discount.toString()
+                            discount: pkg.discount.toString(),
+                            startDate: pkg.startDate,
+                            endDate: pkg.endDate
                           });
                           setIsOpen(true);
                         }}
@@ -204,7 +208,7 @@ export const PackageManagement: React.FC<PackageManagementProps> = React.memo(({
         open={isOpen} 
         onOpenChange={(open) => {
           if (!open) {
-            setFormData({ name: '', description: '', tripIds: [], price: '', discount: '' });
+            setFormData({ name: '', description: '', tripIds: [], price: '', discount: '', startDate: '', endDate: '' });
             setEditingPackage(null);
             setIsOpen(false);
           }
@@ -239,7 +243,7 @@ export const PackageManagement: React.FC<PackageManagementProps> = React.memo(({
               <Label className="text-right">Trips</Label>
               <div className="col-span-3 space-y-2">
                 {trips
-                  .filter(trip => trip.status === 'upcoming')
+                  .filter(trip => trip.status === 'active')
                   .map(trip => (
                     <div key={trip.id} className="flex items-center space-x-2">
                       <input
@@ -265,8 +269,8 @@ export const PackageManagement: React.FC<PackageManagementProps> = React.memo(({
                       </label>
                     </div>
                   ))}
-                {trips.filter(trip => trip.status === 'upcoming').length === 0 && (
-                  <p className="text-sm text-muted-foreground">No upcoming trips available</p>
+                {trips.filter(trip => trip.status === 'active').length === 0 && (
+                  <p className="text-sm text-muted-foreground">No active trips available</p>
                 )}
               </div>
             </div>
@@ -292,6 +296,28 @@ export const PackageManagement: React.FC<PackageManagementProps> = React.memo(({
                   ...prev, 
                   discount: e.target.value
                 }))}
+                className="col-span-3" 
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="startDate" className="text-right">Start Date</Label>
+              <Input 
+                id="startDate" 
+                type="date"
+                value={formData.startDate}
+                onChange={(e) => setFormData(prev => ({...prev, startDate: e.target.value}))}
+                className="col-span-3" 
+              />
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="endDate" className="text-right">End Date</Label>
+              <Input 
+                id="endDate" 
+                type="date"
+                value={formData.endDate}
+                min={formData.startDate} // Ensure end date is after start date
+                onChange={(e) => setFormData(prev => ({...prev, endDate: e.target.value}))}
                 className="col-span-3" 
               />
             </div>

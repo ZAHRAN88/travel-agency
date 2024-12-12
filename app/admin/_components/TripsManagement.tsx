@@ -1,76 +1,35 @@
 "use client"
 
 import React, { useState } from 'react';
-import { 
-  Map, 
-  Plus, 
-  Edit, 
-  Trash2 
-} from 'lucide-react';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle
-} from '@/components/ui/dialog';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
+import { Map, Plus, Edit, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 interface TripsManagementProps {
   trips: Trip[];
   onAddTrip: (trip: NewTripForm) => void;
   onEditTrip: (id: number, trip: NewTripForm) => void;
   onDeleteTrip: (id: number) => void;
+  onToggleStatus: (id: number) => void;
 }
-
-const getTripStatus = (date: string): Trip['status'] => {
-  const tripDate = new Date(date);
-  const today = new Date();
-  
-  // Set times to midnight for accurate date comparison
-  tripDate.setHours(0, 0, 0, 0);
-  today.setHours(0, 0, 0, 0);
-  
-  // Add 7 days to trip date for "ongoing" status duration
-  const endDate = new Date(tripDate);
-  endDate.setDate(endDate.getDate() + 7);
-  
-  if (tripDate > today) {
-    return 'upcoming';
-  } else if (tripDate <= today && today <= endDate) {
-    return 'ongoing';
-  } else {
-    return 'completed';
-  }
-};
 
 export const TripsManagement: React.FC<TripsManagementProps> = React.memo(({ 
   trips, 
   onAddTrip,
   onEditTrip,
-  onDeleteTrip
+  onDeleteTrip,
+  onToggleStatus
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
   const [formData, setFormData] = useState<NewTripForm>({
     name: '',
     destination: '',
-    date: '',
     price: ''
   });
 
@@ -96,7 +55,6 @@ export const TripsManagement: React.FC<TripsManagementProps> = React.memo(({
               <TableRow>
                 <TableHead className="w-[200px]">Name</TableHead>
                 <TableHead className="hidden sm:table-cell">Destination</TableHead>
-                <TableHead className="hidden md:table-cell">Date</TableHead>
                 <TableHead className="hidden sm:table-cell">Price</TableHead>
                 <TableHead className="hidden lg:table-cell">Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -115,16 +73,30 @@ export const TripsManagement: React.FC<TripsManagementProps> = React.memo(({
                     </div>
                   </TableCell>
                   <TableCell className="hidden sm:table-cell">{trip.destination}</TableCell>
-                  <TableCell className="hidden md:table-cell">{trip.date}</TableCell>
                   <TableCell className="hidden sm:table-cell">${trip.price}</TableCell>
                   <TableCell className="hidden lg:table-cell">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium
-                      ${trip.status === 'upcoming' ? 'bg-blue-100 text-blue-800' :
-                      trip.status === 'ongoing' ? 'bg-green-100 text-green-800' :
-                      'bg-gray-100 text-gray-800'}`}
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => onToggleStatus(trip.id)}
+                      className={`${
+                        trip.status === 'active' 
+                          ? 'text-green-600 hover:text-green-700' 
+                          : 'text-red-600 hover:text-red-700'
+                      }`}
                     >
-                      {trip.status}
-                    </span>
+                      {trip.status === 'active' ? (
+                        <>
+                          <ToggleRight className="h-4 w-4 mr-2" />
+                          Active
+                        </>
+                      ) : (
+                        <>
+                          <ToggleLeft className="h-4 w-4 mr-2" />
+                          Inactive
+                        </>
+                      )}
+                    </Button>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end space-x-2">
@@ -137,7 +109,6 @@ export const TripsManagement: React.FC<TripsManagementProps> = React.memo(({
                           setFormData({
                             name: trip.name,
                             destination: trip.destination,
-                            date: trip.date,
                             price: trip.price.toString()
                           });
                           setIsOpen(true);
@@ -166,7 +137,7 @@ export const TripsManagement: React.FC<TripsManagementProps> = React.memo(({
         open={isOpen} 
         onOpenChange={(open) => {
           if (!open) {
-            setFormData({ name: '', destination: '', date: '', price: '' });
+            setFormData({ name: '', destination: '', price: '' });
             setEditingTrip(null);
             setIsOpen(false);
           }
@@ -198,16 +169,6 @@ export const TripsManagement: React.FC<TripsManagementProps> = React.memo(({
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="date" className="text-right">Date</Label>
-              <Input 
-                id="date" 
-                type="date"
-                value={formData.date}
-                onChange={(e) => setFormData(prev => ({...prev, date: e.target.value}))}
-                className="col-span-3" 
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="price" className="text-right">Price</Label>
               <Input 
                 id="price" 
@@ -227,7 +188,7 @@ export const TripsManagement: React.FC<TripsManagementProps> = React.memo(({
               }
               setIsOpen(false);
               setEditingTrip(null);
-              setFormData({ name: '', destination: '', date: '', price: '' });
+              setFormData({ name: '', destination: '', price: '' });
             }} 
             className="w-full"
           >

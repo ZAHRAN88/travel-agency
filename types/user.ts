@@ -32,6 +32,7 @@ interface DashboardProps {
   users: User[];
   trips: Trip[];
   admins: Admin[];
+  packages: Package[];
 }
 
 interface StatCardProps {

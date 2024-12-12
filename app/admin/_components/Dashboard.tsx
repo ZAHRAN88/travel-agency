@@ -14,8 +14,7 @@ import {
   CardTitle 
 } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-
-
+import { mockPackages, mockTrips, mockUsers } from '@/mockData';
 
 const StatCard: React.FC<StatCardProps> = ({ title, value, icon, description }) => (
   <Card>
@@ -33,12 +32,13 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, description }) 
 );
 
 export const Dashboard: React.FC<DashboardProps> = React.memo(({ 
-  users, 
-  trips, 
-  admins 
+  users = mockUsers, 
+  trips = mockTrips, 
+  admins = [],
+  packages = mockPackages 
 }) => {
-  const upcomingTrips = trips.filter(trip => trip.status === 'upcoming').length;
-  const ongoingTrips = trips.filter(trip => trip.status === 'ongoing').length;
+  const activeTrips = trips.filter(trip => trip.status === 'active').length;
+  const activePackages = packages.filter(pkg => pkg.status === 'active').length;
 
   return (
     <div className="space-y-6 p-2 sm:p-4">
@@ -61,17 +61,17 @@ export const Dashboard: React.FC<DashboardProps> = React.memo(({
         />
         
         <StatCard
-          title="Upcoming Trips"
-          value={upcomingTrips}
+          title="Active Trips"
+          value={activeTrips}
           icon={<Calendar className="h-4 w-4 text-muted-foreground" />}
-          description="Scheduled trips"
+          description="Currently active trips"
         />
         
         <StatCard
-          title="Ongoing Trips"
-          value={ongoingTrips}
+          title="Active Packages"
+          value={activePackages}
           icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />}
-          description="Currently active trips"
+          description="Currently active packages"
         />
       </div>
 
@@ -103,22 +103,22 @@ export const Dashboard: React.FC<DashboardProps> = React.memo(({
 
         <Card className="lg:col-span-3">
           <CardHeader>
-            <CardTitle className="text-xl">Upcoming Trips</CardTitle>
+            <CardTitle className="text-xl">Active Packages</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {trips
-                .filter(trip => trip.status === 'upcoming')
+              {packages
+                .filter(pkg => pkg.status === 'active')
                 .slice(0, 5)
-                .map(trip => (
-                  <div key={trip.id} className="flex items-center space-x-4">
+                .map(pkg => (
+                  <div key={pkg.id} className="flex items-center space-x-4">
                     <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                       <Map className="h-5 w-5 text-primary" />
                     </div>
                     <div className="space-y-1">
-                      <p className="text-sm font-medium leading-none">{trip.name}</p>
+                      <p className="text-sm font-medium leading-none">{pkg.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        {trip.destination} - {new Date(trip.date).toLocaleDateString()}
+                        {new Date(pkg.startDate).toLocaleDateString()} - {new Date(pkg.endDate).toLocaleDateString()}
                       </p>
                     </div>
                   </div>

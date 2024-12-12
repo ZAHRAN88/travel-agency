@@ -1,27 +1,27 @@
 "use client"
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Menu } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-
 import { Sidebar } from './_components/Sidebar';
+import { Dashboard } from './_components/Dashboard';
 import { AdminManagement } from './_components/AdminManagement';
 import { UserManagement } from './_components/UserManagement';
 import { TripsManagement } from './_components/TripsManagement';
-import { Dashboard } from './_components/Dashboard';
 import { PackageManagement } from './_components/PackageManagement';
-import { mockAdmins, mockTrips, mockUsers, mockPackages } from '@/mockData';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { getTripStatus } from '@/utils/tripStatus';
+import { mockAdmins, mockUsers, mockTrips, mockPackages } from '@/mockData';
+import { getPackageStatus } from '@/utils/packageStatus';
 
 const AdminDashboard: React.FC = () => {
   const [activeSection, setActiveSection] = useState<ActiveSection>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const [admins, setAdmins] = useState<Admin[]>(mockAdmins);
-  const [users, setUsers] = useState<User[]>(mockUsers);
-  const [trips, setTrips] = useState<Trip[]>(mockTrips);
+  
+  const [admins, setAdmins] = useState(mockAdmins);
+  const [users, setUsers] = useState(mockUsers);
+  const [trips, setTrips] = useState(mockTrips);
   const [packages, setPackages] = useState<Package[]>(mockPackages);
 
   const handleAddAdmin = useCallback((newAdmin: NewAdminForm) => {
@@ -38,7 +38,7 @@ const AdminDashboard: React.FC = () => {
       id: prev.length + 1,
       ...newTrip,
       price: parseFloat(newTrip.price),
-      status: getTripStatus(newTrip.date)
+      status: 'active'
     }]);
   }, []);
 
@@ -47,14 +47,21 @@ const AdminDashboard: React.FC = () => {
       trip.id === id ? {
         ...trip,
         ...updatedTrip,
-        price: parseFloat(updatedTrip.price),
-        status: getTripStatus(updatedTrip.date)
+        price: parseFloat(updatedTrip.price)
       } : trip
     ));
   }, []);
 
   const handleDeleteTrip = useCallback((id: number) => {
     setTrips(prev => prev.filter(trip => trip.id !== id));
+  }, []);
+
+  const handleToggleTripStatus = useCallback((id: number) => {
+    setTrips(prev => prev.map(trip => 
+      trip.id === id 
+        ? { ...trip, status: trip.status === 'active' ? 'inactive' : 'active' }
+        : trip
+    ));
   }, []);
 
   const handleAddPackage = useCallback((newPackage: NewPackageForm) => {
@@ -64,7 +71,7 @@ const AdminDashboard: React.FC = () => {
       trips: trips.filter(trip => newPackage.tripIds.includes(trip.id)),
       price: parseFloat(newPackage.price),
       discount: parseFloat(newPackage.discount),
-      status: 'active'
+      status: getPackageStatus(newPackage.startDate, newPackage.endDate)
     }]);
   }, [trips]);
 
@@ -75,7 +82,8 @@ const AdminDashboard: React.FC = () => {
         ...updatedPackage,
         trips: trips.filter(trip => updatedPackage.tripIds.includes(trip.id)),
         price: parseFloat(updatedPackage.price),
-        discount: parseFloat(updatedPackage.discount)
+        discount: parseFloat(updatedPackage.discount),
+        status: getPackageStatus(updatedPackage.startDate, updatedPackage.endDate)
       } : pkg
     ));
   }, [trips]);
@@ -87,7 +95,7 @@ const AdminDashboard: React.FC = () => {
   const renderContent = () => {
     switch (activeSection) {
       case 'dashboard':
-        return <Dashboard users={users} trips={trips} admins={admins} />;
+        return <Dashboard users={users} trips={trips} admins={admins} packages={packages} />;
       case 'admins':
         return (
           <AdminManagement 
@@ -104,6 +112,7 @@ const AdminDashboard: React.FC = () => {
             onAddTrip={handleAddTrip} 
             onEditTrip={handleEditTrip}
             onDeleteTrip={handleDeleteTrip}
+            onToggleStatus={handleToggleTripStatus}
           />
         );
       case 'packages':
@@ -117,32 +126,17 @@ const AdminDashboard: React.FC = () => {
           />
         );
       default:
-        return <Dashboard users={users} trips={trips} admins={admins} />;
+        return <Dashboard users={users} trips={trips} admins={admins} packages={packages} />;
     }
   };
 
-  const updateTripStatuses = useCallback(() => {
-    setTrips(prev => prev.map(trip => ({
-      ...trip,
-      status: getTripStatus(trip.date)
-    })));
-  }, []);
-
-  useEffect(() => {
-    updateTripStatuses();
-    const interval = setInterval(updateTripStatuses, 1000 * 60 * 60); // Update every hour
-    return () => clearInterval(interval);
-  }, [updateTripStatuses]);
-
   return (
-    <div className="flex h-screen bg-background">
-      {/* Mobile Menu Button */}
+    <div className="min-h-screen bg-background">
       <Button
         variant="ghost"
         size="icon"
         className={`
-          fixed top-4 left-4 z-50
-          ${isMobile ? 'block' : 'hidden'}
+          fixed top-4 left-4 z-50 md:hidden
           ${isSidebarOpen ? 'hidden' : 'block'}
         `}
         onClick={() => setIsSidebarOpen(true)}
@@ -150,28 +144,40 @@ const AdminDashboard: React.FC = () => {
         <Menu className="h-6 w-6" />
       </Button>
 
-      {/* Sidebar */}
-      <Sidebar 
-        activeSection={activeSection}
-        setActiveSection={setActiveSection}
-        isMobile={isMobile}
-        isSidebarOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-      />
+      <div className="flex min-h-screen">
+        <Sidebar 
+          activeSection={activeSection}
+          setActiveSection={setActiveSection}
+          isMobile={isMobile}
+          isSidebarOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+        />
 
-      {/* Main Content Area */}
-      <div className={`
-        flex-1 overflow-auto transition-all duration-300
-        ${isSidebarOpen && !isMobile ? 'ml-5' : 'ml-0'}
-      `}>
-        <ScrollArea className="h-full">
-          <div className="p-4">
-            {renderContent()}
+        <main className={`
+          flex-1 transition-all duration-300 ease-in-out
+          ${isSidebarOpen && !isMobile ? 'ml-5' : 'ml-0'}
+          min-h-screen
+        `}>
+          <div className="container mx-auto px-4 py-8">
+            <div className="rounded-lg bg-background">
+              <ScrollArea className="h-[calc(100vh-2rem)]">
+                <div className="p-6">
+                  {renderContent()}
+                </div>
+              </ScrollArea>
+            </div>
           </div>
-        </ScrollArea>
+        </main>
       </div>
+
+      {isMobile && isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
     </div>
-  )
-}
+  );
+};
 
 export default AdminDashboard;
